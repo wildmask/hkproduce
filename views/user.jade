@@ -1,0 +1,47 @@
+extends layout
+
+block content
+	h1= title
+	h1= maker.maker_name
+
+	div(style={display:'none'})
+		p#maker_id=  maker.maker_id
+
+	<br/>
+	div#register(style={width:'500px'})
+		table.table(id='list')
+			tr
+				th  開始日期
+				th  結束日期
+				th  收入
+
+	script.
+		$(document).ready(function(){
+			console.log("hello");
+			var maker_id = $("#maker_id").html();
+			console.log(maker_id);
+
+			$.ajax({
+				url: '/Revenue',
+				type: 'post',
+				data:{
+					action: 'get',
+					maker_id: maker_id,
+				},
+				dateType: 'json',
+				success:function(data){
+
+					var str;
+					for (x in data){
+						str+= "<tr><td>" + data[x].start_date.substring(0,10) + "</td>";
+						str+= "<td>" + data[x].end_date.substring(0,10) + "</td>";
+						str+= "<td>" + data[x].revenue + "</td></tr>";
+						$("#list").append(str);
+					}
+
+				}
+			});
+
+		});
+
+

@@ -3,3 +3,83 @@ extends layout
 block content
 	h1= title
 
+
+	<br/>
+	div
+		span 日期:
+		span
+			input.form-control(type='date', name='date', value='', id='date', style={width:'200px'})
+
+	<br/><br/>
+
+
+	div#register(style={width:'800px'})
+		table.table(id="list")
+			tr
+				td  序号
+				td  柜台标签
+				td  本周收入
+				td  密码
+				td  生成密码
+
+
+
+
+	script.
+		$(document).ready(function(){
+
+			$.ajax({
+				url:'/counter',
+				type: 'post',
+				data:{
+					action:'getList',
+				},
+				dataType: 'json',
+				success:function(data){
+
+					var str;
+					for (x in data){
+						console.log(data[x]);
+						str = "";
+						str+= "<tr><td>" + data[x].counter_id +"</td>";
+						str+= "<td>" + data[x].name + "</td>";
+						str+= "<td>" + "111" + "</td>";
+						str+= "<td>" + data[x].code + "</td>";
+						str+= "<td>" + "<button class='btn btn-default'> 生成 </button>" + "</td>";
+						str+= "</tr>";
+						$("#list").append(str);
+					} 
+				},
+				error:function(data){
+					console.log('err');
+				}
+			});
+
+
+
+			$("table").delegate("input", "change", function(){
+				console.log($(this).val());
+				console.log($(this).attr('id'));
+
+				var date = $("#date").val();
+				var revenue = $(this).val();
+				var maker_id = $(this).attr('id');
+
+				$.ajax({
+					url: '/Revenue',
+					type: 'post',
+					data:{
+						action: 'set',
+						date: date,
+						revenue: revenue,
+						maker_id: maker_id,
+					},
+					dateType: 'json',
+					success:function(data){
+						console.log("保存成功");
+					}
+				});
+			});
+
+		
+		});

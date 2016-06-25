@@ -1,0 +1,32 @@
+extends layout
+
+block content
+	h1  香港手作櫃檯查詢
+
+	<br/>
+
+	div#login(style={width:'500px'})
+
+		form(action='/maker' method='post')
+			table.table
+				tr
+					td  櫃檯編號
+					td 
+						input.form-control(id='name' name='name' type='text' placeholder='eg. 1Aa')
+				tr
+					td  櫃檯暗碼
+					td 
+						input.form-control(id='code' name='code'  type='text')
+				tr
+					td(colspan='2')
+						input.form-control(type='submit', id='submit')
+
+
+		style.
+			input#maker-login, input#maker-register{
+				width:120px;
+				margin: auto;
+				margin-top: 20px;
+			}
+
+	script.

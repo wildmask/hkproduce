@@ -46,6 +46,10 @@ block content
 				td 
 					input.form-control(type='text', id='email', name='email')
 			tr
+				td 品牌
+				td 
+					input.form-control(type='text', id='brand_name', name='brand_name')			
+			tr
 				td 密码
 				td 
 					input.form-control(type='text', id='password_reg', name='password')
@@ -96,6 +100,11 @@ block content
 					dataType: 'json',
 					success:function(data){
 						console.log(data);
+						if(data.success==0){
+							alert("电话或密码错误，请重新输入！");
+						}else{
+							location.href="/user?user_id=21";
+						}
 					},
 					error:function(data){
 						console.log('err');
@@ -105,6 +114,47 @@ block content
 
 			$("#maker-register").click(function(){
 				console.log('register');
+
+				maker_name = $("#maker_name").val();
+				email = $("#email").val();
+				maker_name = $("#maker_name").val();
+				mobile = $("#mobile_reg").val();
+				brand_name = $("#brand_name").val();
+				password = $("#password_reg").val();
+				repassword = $("#repassword").val();
+
+				if(password!=repassword){
+					alert("密码不一致");
+					return 0;
+				}else{
+					console.log("密码一致");
+				}
+
+				event.preventDefault();
+				$.ajax({
+					url:'/maker',
+					type: 'post',
+					data:{
+						action:'register',
+						mobile: mobile,
+						password: password,
+						maker_name: maker_name,
+						email: email,
+						brand_name: brand_name,
+					},
+					dataType: 'json',
+					success:function(data){
+						console.log(data);
+						if(data.success==0){
+							alert("信息错误，请重新输入！");
+						}else{
+							location.href="/maker";
+						}
+					},
+					error:function(data){
+						console.log('err');
+					}
+				});
 			});
 
 		});
