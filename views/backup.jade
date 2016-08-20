@@ -1,0 +1,161 @@
+extends layout
+
+block content
+	h1  香港手作
+
+	<br/>
+
+	div
+		button(class='btn-lg btn-default' id='bt-login')  登录
+		span  &nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;
+
+		button(class='btn-lg btn-default' id='bt-register')  注册
+
+	<hr/>
+
+
+	div#login(style={width:'500px'})
+		input(type='hidden', id='action-log', name='action', value='login')
+		table.table
+			tr
+				td  电话
+				td 
+					input.form-control(id='mobile_log', name='mobile' type='text' placeholder='eg. 53607629')
+			tr
+				td  密码
+				td 
+					input.form-control(id='password_log', name='password',  type='password')
+			tr
+				td(colspan='2')
+					input.form-control(type='submit', id='maker-login')
+
+
+	div#register(style={width:'500px',display:'none'})
+		input(type='hidden', id='action-reg', name='action', value='register')
+		table.table
+			tr
+				td 姓名
+				td 
+					input.form-control(type='text', id='maker_name', name='maker_name')
+			tr
+				td 电话
+				td 
+					input.form-control(type='text', id='mobile_reg', name='mobile')
+			tr
+				td 邮箱
+				td 
+					input.form-control(type='text', id='email', name='email')
+			tr
+				td 品牌
+				td 
+					input.form-control(type='text', id='brand_name', name='brand_name')			
+			tr
+				td 密码
+				td 
+					input.form-control(type='text', id='password_reg', name='password')
+			tr
+				td 确认密码
+				td 
+					input.form-control(type='text', id='repassword', name='repassword')
+			tr
+				td(colspan='2')
+					input.form-control(type='submit', id='maker-register')
+
+
+
+		style.
+			input#maker-login, input#maker-register{
+				width:120px;
+				margin: auto;
+				margin-top: 20px;
+			}
+
+	script.
+		$(document).ready(function(){
+			$("#bt-login").click(function(){
+				$("#login").show();
+				$("#register").hide();
+			});
+
+			$("#bt-register").click(function(){
+				$("#register").show();
+				$("#login").hide();
+			});
+
+
+			$("#maker-login").click(function(){
+				console.log('login');
+				mobile = $("#mobile_log").val();
+				password = $("#password_log").val();
+
+				event.preventDefault();
+				$.ajax({
+					url:'/maker',
+					type: 'post',
+					data:{
+						action:'login',
+						mobile: mobile,
+						password: password,
+					},
+					dataType: 'json',
+					success:function(data){
+						console.log(data);
+						if(data.success==0){
+							alert("电话或密码错误，请重新输入！");
+						}else{
+							location.href="/user?user_id=21";
+						}
+					},
+					error:function(data){
+						console.log('err');
+					}
+				});
+			});
+
+			$("#maker-register").click(function(){
+				console.log('register');
+
+				maker_name = $("#maker_name").val();
+				email = $("#email").val();
+				maker_name = $("#maker_name").val();
+				mobile = $("#mobile_reg").val();
+				brand_name = $("#brand_name").val();
+				password = $("#password_reg").val();
+				repassword = $("#repassword").val();
+
+				if(password!=repassword){
+					alert("密码不一致");
+					return 0;
+				}else{
+					console.log("密码一致");
+				}
+
+				event.preventDefault();
+				$.ajax({
+					url:'/maker',
+					type: 'post',
+					data:{
+						action:'register',
+						mobile: mobile,
+						password: password,
+						maker_name: maker_name,
+						email: email,
+						brand_name: brand_name,
+					},
+					dataType: 'json',
+					success:function(data){
+						console.log(data);
+						if(data.success==0){
+							alert("信息错误，请重新输入！");
+						}else{
+							location.href="/maker";
+						}
+					},
+					error:function(data){
+						console.log('err');
+					}
+				});
+			});
+
+		});
+

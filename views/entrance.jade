@@ -5,6 +5,10 @@ block content
 
 	<br/>
 
+	- if(err){
+	- 	console.log(err);
+	- }
+
 	div#login(style={width:'500px'})
 
 		form(action='/maker' method='post')
@@ -12,7 +16,7 @@ block content
 				tr
 					td  櫃檯編號
 					td 
-						input.form-control(id='name' name='name' type='text' placeholder='eg. 1Aa')
+						input.form-control(id='name' name='name' type='text' placeholder='eg. A1a')
 				tr
 					td  櫃檯暗碼
 					td 

@@ -6,27 +6,52 @@ block content
 
 	<br/>
 	div
-		span 日期:
-		span
-			input.form-control(type='date', name='date', value='', id='date', style={width:'200px'})
+		div(style={float:'left','height':'34px','line-height':'34px'} ) 
+			sapn  日期 : 
+		div(style={float:'left', 'margin-left':'15px'})
+			input.form-control(type='date', name='date', value='', id='date', style={width:'200px'}) 
+		div(style={float:'left', 'margin-left':'15px'})
+			button(class="btn btn-default", id="search")  查询	
+		div(style={clear:'both'})
+
 
 	<br/><br/>
 
 
-	div#register(style={width:'800px'})
+	div#register(style={width:'960px'})
 		table.table(id="list")
+			colgroup
+				col(style="width:3%")
+				col(style="width:10%")
+				col(style="width:10%")
+				col(style="width:15%")
+				col(style="width:15%")
+				col(style="width:15%")
+				col(style="width:10%")
+				col(style="width:12%")
 			tr
 				td  序号
-				td  柜台标签
-				td  本周收入
-				td  密码
-				td  生成密码
+				td  柜台編號
+				td  收入
+				td  收入备注
+				td  保存收入记录
+				td  暗碼
+				td  上次生成时间
+				td  生成暗碼
 
+
+		style.
+			.table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th{
+				text-align: center;
+			}
 
 
 
 	script.
 		$(document).ready(function(){
+
+
+		//  get counter list
 
 			$.ajax({
 				url:'/counter',
@@ -39,16 +64,18 @@ block content
 
 					var str;
 					for (x in data){
-						console.log(data[x]);
 						str = "";
 						str+= "<tr><td>" + data[x].counter_id +"</td>";
 						str+= "<td>" + data[x].name + "</td>";
-						str+= "<td>" + "111" + "</td>";
-						str+= "<td>" + data[x].code + "</td>";
-						str+= "<td>" + "<button class='btn btn-default'> 生成 </button>" + "</td>";
+						str+= "<td>" + "<input id="+'revenue'+data[x].counter_id + "  class='revenue'></td>";
+						str+= "<td>" + "<input id="+'remark'+data[x].counter_id + " class='remark'></td>";
+						str+= "<td>" + "<button class='revenue-save btn btn-default' name=" + data[x].counter_id +"> 保存 </button> " + "</td>";
+						str+= "<td><span>" + data[x].code + "</span> </td>";
+						str+= "<td>yyyymmdd</td>"
+						str+= "<td>" + "<button class='code-generator btn btn-default' name=" + data[x].counter_id +"> 生成 </button> " + "</td>";
 						str+= "</tr>";
 						$("#list").append(str);
-					} 
+					}
 				},
 				error:function(data){
 					console.log('err');
@@ -57,29 +84,112 @@ block content
 
 
 
-			$("table").delegate("input", "change", function(){
-				console.log($(this).val());
-				console.log($(this).attr('id'));
+		// set revenue
+
+			$("table").delegate("button.revenue-save", "click", function(){
+
+				
+				var revenue = $(this).parent().parent().find('input.revenue').val();
+				var remark = $(this).parent().parent().find('input.remark').val();
+				var counter_id = $(this).attr('name');
+				var code = $(this).parent().parent().find('span').html();
 
 				var date = $("#date").val();
-				var revenue = $(this).val();
-				var maker_id = $(this).attr('id');
+				if(!date){
+					alert("請先選擇時間!");
+					return 0;
+				}
+
+
+
+				console.log("date:" + date + " revenue: "+ revenue + " counter_id: "+ counter_id + "remark:" + remark);
 
 				$.ajax({
-					url: '/Revenue',
+					url: '/revenue',
 					type: 'post',
+					dataType: 'json',
 					data:{
 						action: 'set',
 						date: date,
 						revenue: revenue,
-						maker_id: maker_id,
+						counter_id: counter_id,
+						code: code,
+						remark: remark,
 					},
-					dateType: 'json',
-					success:function(data){
-						console.log("保存成功");
+					success: function(data){
+						console.log('getCounterList: success');
+					},
+					error: function(err){
+						console.log(err);
 					}
 				});
+
 			});
 
+
+		//  generate new code for counter
+
+			$("table").delegate("button.code-generator", "click", function(){
+				var counter_id = $(this).attr('name');
+				var that = $(this);
+
+				var ans = confirm("确认修改？");
+
+				if(ans){
+					$.ajax({
+						url: '/code',
+						type: 'post',
+						dataType: 'json',
+						data: {
+							counter_id: counter_id,
+						},
+						success: function(data){
+							console.log(data.code);
+							that.parent().parent().find('span').html(data.code);
+						},
+					});
+				}
+			});
+
+		//  search revenue list for different weeks
+
+			$("#search").click(function(){
+				console.log("search");
+				
+				var date = $("#date").val();
+				if(!date){
+					alert("請先選擇時間!");
+					return 0;
+				}
+
+				$("div#register").find("input").each(function(){
+				  $(this).val("");
+				});
+				
+				$.ajax({
+					url: '/revenue',
+					type: 'post',
+					dataType: 'json',
+					data:{
+						action: 'getWeekList',
+						date: date,
+					},
+					success: function(data){
+						for(record in data){
+							console.log(data[record]);
+							var revenue_id = 'revenue' + data[record].counter_id;
+							var remark_id = 'remark' + data[record].counter_id;
+
+							$("#"+revenue_id).val(data[record].revenue);
+							$("#"+remark_id).val(data[record].remark);
+
+						}
+					},
+					error: function(err){
+						console.log(err);
+					}
+				});
+
+			});
 		
 		});

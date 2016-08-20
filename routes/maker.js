@@ -2,6 +2,24 @@ var express = require('express');
 
 var moment = require('moment');
 
+function makeDate(date) {
+    try {
+        var newDate = new Date(date);
+        //在小于10的月份前补0
+        var month = eval(newDate.getMonth() + 1) < 10 ? '0'+eval(newDate.getMonth() + 1) : eval(newDate.getMonth() + 1);
+        //在小于10的日期前补0
+        var day = newDate.getDate() < 10 ? '0' + newDate.getDate() : newDate.getDate();
+        //在小于10的小时前补0
+        var stringDate = newDate.getFullYear() + '-' + month + '-' + day;
+    }catch(e){
+        var stringDate = "0000-00-00 00:00:00";
+    }finally{
+        return stringDate;
+    }
+
+};
+
+
 function Maker(){
 	var mysql      = require('mysql');
 	var connection = mysql.createConnection({
@@ -34,23 +52,23 @@ function Maker(){
 		});
 	}
 
-	this.login = function(maker, callback){
+	this.login = function(counter, callback){
 
-		var sql = "select * from maker where mobile = \'"+ maker.mobile + "\'";
+
+		var sql = "select * from counter where name = \'"+ counter.name + "\'";
 		var ret;
 
 		connection.query(sql, function(err, res){
 
-
 			if(!res[0]){
-				ret = {err:"手机号不存在", data:""};
+				ret = {err:"櫃檯編號錯誤", data:""};
 				callback(ret);
 			}else{
-			  	if(res[0].password == maker.password){
-			  		ret = {err:"", data: res[0].maker_id};
+			  	if(res[0].code == counter.code){
+			  		ret = {err:"", data: res[0].counter_id};
 			  		callback(ret);
 			  	}else{
-			  		ret = {err:"密码错误", data: ""};
+			  		ret = {err:"櫃檯暗碼錯誤", data: ""};
 			  		callback(ret);
 			  	}
 			}
@@ -73,16 +91,59 @@ function Maker(){
 		connection.query(sql, function(err, res){
 		  	callback(res);
 		});
-
 	}
 
 
-	this.setWeekRev = function(maker, callback) {
-		var sql = "insert into revenue (week_id, revenue, maker_id) values (" + maker.week_id + ", " + 
-			maker.revenue + ", " + maker.maker_id + ")";
+
+	// get revenue list by week_id
+	this.getRevenueList = function(week_id, callback){
+		console.log("week_id="+ week_id);
+		var sql = "select * from revenue where week_id= \'" + week_id + "\'";
 
 		connection.query(sql, function(err, res){
 		  	callback(res);
+		});
+	}
+
+	// get revenue by week_id and counter_id
+	this.getRevenue = function(counter, callback){
+		var sql = "select code from counter where counter_id="+counter.counter_id ;
+		connection.query(sql, function(err, data){
+			sql = "select * from revenue join week on revenue.week_id = week.week_id where code = \'" + data[0].code + "\' order by revenue_id desc";
+
+			console.log(sql);
+
+			connection.query(sql, function(err, res){
+				for (i in res){
+				  	res[i].start_date = makeDate(res[i].start_date);
+				  	console.log(res[i].start_date);
+				  	res[i].end_date = makeDate(res[i].end_date);
+				  	console.log(res[i].end_date);
+				}
+				callback(res);
+			});
+		});
+
+	}
+
+	this.setWeekRev = function(counter, callback) {
+
+		// 刪除原來的記錄
+		console.log(counter);
+
+		var sql = "delete from revenue where week_id=" + counter.week_id + " and counter_id=" + counter.counter_id;
+		connection.query(sql, function(err,res){
+			if(!err){
+				console.log("insert");
+				var sql = "insert into revenue (week_id, revenue, counter_id, code, remark) values (" + counter.week_id + ", " + 
+					counter.revenue + ", " + counter.counter_id + ", \'" + counter.code +  "\', \'"+ counter.remark +  "\' )";
+				console.log(sql);
+
+				connection.query(sql, function(err, res){
+					console.log(err);
+				  	callback(res);
+				});				
+			}
 		});
 	}
 
@@ -94,13 +155,6 @@ function Maker(){
 		});
 	}
 
-	this.getRevenue = function(maker_id, callback){
-		console.log("maker_id: " + maker_id)
-		var sql = "select * from revenue join week on revenue.week_id = week.week_id where maker_id = \'" + maker_id + "\' order by revenue_id desc";
-		connection.query(sql, function(err, res){
-			callback(res);
-		});
-	}
 
 
 	this.setCounter = function(maker_id, callback){
@@ -144,20 +198,19 @@ function Maker(){
 		callback("hello");
 	}
 
-	this.setCode = function(counter_id){
+	this.setCode = function(counter_id, callback){
 		var crypto = require('crypto');
 		var date = new Date();
 		var content = 'password'+date+counter_id;
 		var md5 = crypto.createHash('md5');
 		md5.update(content);
-		var d = md5.digest('hex');  //MD5值是5f4dcc3b5aa765d61d8327deb882cf99
+		var d = md5.digest('hex').substring(0,12);  //MD5值是5f4dcc3b5aa765d61d8327deb882cf99
 
-		var sql = "update counter set code = \'" + d.substring(0,12) + "\' where counter_id=" + counter_id + "";
+		var sql = "update counter set code = \'" + d + "\' where counter_id=" + counter_id + "";
 		connection.query(sql, function(err, res){
-			console.log(err);
+			callback(d);
 		});
 
-		console.log(sql);
 	}
 
 
@@ -194,6 +247,15 @@ function Maker(){
 			});
 
 		});
+	}
+
+	this.configureWeek = function(callback){
+			this.updateWeek();
+	}
+
+
+	this.test = function(){
+	
 	}
 }
 

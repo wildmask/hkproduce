@@ -4,3 +4,24 @@ block content
 	h1  櫃檯收入顯示
 
 	<br/>
+
+
+	table.table
+		tr  
+			td  編號
+			td  起始日期
+			td  結束日期
+			td  收入
+			td  備註
+			
+		- for (var i=0; i< data.length; i++){
+			tr
+				td 	#{data[i].week_id}
+				td  #{data[i].start_date}
+				td  #{data[i].end_date}
+				td  #{data[i].revenue}
+				td  #{data[i].remark}
+		- }
+
+
+

@@ -6,73 +6,39 @@ var database1 = require('./maker');
 var maker = new database1();
 
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-	res.render('index', { title: 'Express' });
-});
 
-
-/* registration page */
-router.get('/staff', function(req, res, next) {
-	res.render('staff', { title: '管理界面' });
-});
 
 /* login page */
-router.get('/login', function(req, res, next) {
-	res.render('login', { title: '手作家登录' });
+
+
+router.get('/login', function(req, res, next){
+	res.render('login', { title: '管理界面' });
 });
+
+
+router.post('/login', function(req, res, next){
+
+	var name = req.body.manager;
+	var password = req.body.password;
+
+	if(password == name+'2016hkproduce'){
+		console.log('登錄成功');
+		res.render('staff', { title: '管理界面' });
+	}else{
+		console.log('登錄失敗');
+		res.render('login', { title: '管理界面' });
+	}
+
+})
+
 
 router.get('/entrance', function(req, res, next) {
 	res.render('entrance', { title: '手作家登录' });
 });
 
-router.get('/user/:id', function(req, res, next) {
-
-	console.log(req.params.id);
-
-	maker.getMaker(req.params.id, function(result){
-		console.log(result);
-		res.render('user', {maker: result[0], title: '手作家'});
-	});
-
-});
 
 
-/* login page */
-/*router.post('/maker', function(req, res, next) {
-
-
-	if(req.body.action=='login'){
-		console.log(req.body);
-		maker.login(req.body, function(result){
-			if(!result.err){
-				res.send({success:1});
-			}else{
-				res.send({success:0});
-			}
-		});
-	}else{
-		if(req.body.action =='register'){
-			maker.add(req.body, function(result){
-				if(!result.err){
-					res.send({success:1});
-				}else{
-					res.send({success:0});
-				}
-			});
-
-		}else{
-			if(req.body.action =='getList'){
-				maker.getList(req.body, function(result){
-					res.send(result);
-				});
-			}	
-		}
-	}
-	//maker.add(req.body);
-});*/
-
-
+// 獲取櫃檯列表
 router.post('/counter', function(req, res, next) {
 	console.log(req.body);
 
@@ -82,35 +48,57 @@ router.post('/counter', function(req, res, next) {
 });
 
 
-
+// 手作家界面：
 router.post('/maker', function(req, res, next) {
 	console.log(req.body);
 
 	maker.login(req.body, function(result){
-		console.log(result);
+		var counter = {counter_id: result.data};
+		if(result.err){
+			res.render('entrance', {title: '手作家', err: result.err});
+		}else{
+			maker.getRevenue(counter, function(counter){
+				res.render('maker', {title: '手作家', data: counter});
+			});
+		}
+	
 	});
-	res.render('maker', {title: '手作家'});
+
 });
+
+// 生成新的 櫃檯暗碼
+router.post('/code', function(req, res, next){
+	console.log(req.body);
+
+	maker.setCode(req.body.counter_id, function(result){
+		console.log("res:" + result);
+		res.send({'code':result});
+	});
+})
 
 
 
 router.post('/test', function(req, res){
-	maker.testCode();
+	console.log("enter test");
+	maker.configureWeek();
 });
 
-
-router.post('/Revenue', function(req, res){
+// 收益： 輸入每週收益； 獲取收益列表
+router.post('/revenue', function(req, res){
 
 	console.log(req.body);
 
 	if(req.body.action=='set'){
+
 
 		maker.getWeek(req.body.date, function(result){
 
 			var para = {
 				week_id: result[0].week_id,
 				revenue: req.body.revenue,
-				maker_id: req.body.maker_id,
+				counter_id: req.body.counter_id,
+				remark: req.body.remark,
+				code: req.body.code,
 			};
 
 			maker.setWeekRev(para, function(result){
@@ -119,10 +107,21 @@ router.post('/Revenue', function(req, res){
 
 		});
 	}else{
-		maker.getRevenue(req.body.maker_id, function(result){
-			console.log(result);
-			res.send(result);
-		});
+
+		if(req.body.action=='getWeekList'){
+			maker.getWeek(req.body.date, function(result){
+				maker.getRevenueList(result[0].week_id, function(result){
+					console.log(result);
+					res.send(result);
+				});
+			});
+
+		}else{
+			maker.getRevenue(req.body.counter_id, function(result){
+				console.log(result);
+				res.send(result);
+			});
+		}
 	}
 
 
