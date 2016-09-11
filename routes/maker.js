@@ -97,9 +97,7 @@ function Maker(){
 
 	// get revenue list by week_id
 	this.getRevenueList = function(week_id, callback){
-		console.log("week_id="+ week_id);
 		var sql = "select * from revenue where week_id= \'" + week_id + "\'";
-
 		connection.query(sql, function(err, res){
 		  	callback(res);
 		});
@@ -109,16 +107,17 @@ function Maker(){
 	this.getRevenue = function(counter, callback){
 		var sql = "select code from counter where counter_id="+counter.counter_id ;
 		connection.query(sql, function(err, data){
-			sql = "select * from revenue join week on revenue.week_id = week.week_id where code = \'" + data[0].code + "\' order by revenue_id desc";
+			sql = "select * from revenue \
+			left join counter on revenue.counter_id = counter.counter_id \
+			inner join week on revenue.week_id = week.week_id \
+			where revenue.code = \'" + data[0].code + "\' \
+			order by revenue_id asc";
 
-			console.log(sql);
 
 			connection.query(sql, function(err, res){
 				for (i in res){
 				  	res[i].start_date = makeDate(res[i].start_date);
-				  	console.log(res[i].start_date);
 				  	res[i].end_date = makeDate(res[i].end_date);
-				  	console.log(res[i].end_date);
 				}
 				callback(res);
 			});
@@ -129,18 +128,15 @@ function Maker(){
 	this.setWeekRev = function(counter, callback) {
 
 		// 刪除原來的記錄
-		console.log(counter);
 
 		var sql = "delete from revenue where week_id=" + counter.week_id + " and counter_id=" + counter.counter_id;
 		connection.query(sql, function(err,res){
 			if(!err){
-				console.log("insert");
 				var sql = "insert into revenue (week_id, revenue, counter_id, code, remark) values (" + counter.week_id + ", " + 
 					counter.revenue + ", " + counter.counter_id + ", \'" + counter.code +  "\', \'"+ counter.remark +  "\' )";
-				console.log(sql);
 
 				connection.query(sql, function(err, res){
-					console.log(err);
+					console.log("insert: " + res['insertId']);
 				  	callback(res);
 				});				
 			}

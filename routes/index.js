@@ -40,7 +40,6 @@ router.get('/entrance', function(req, res, next) {
 
 // 獲取櫃檯列表
 router.post('/counter', function(req, res, next) {
-	console.log(req.body);
 
 	maker.getCounterList(req.body, function(result){
 		res.send(result);
@@ -50,7 +49,6 @@ router.post('/counter', function(req, res, next) {
 
 // 手作家界面：
 router.post('/maker', function(req, res, next) {
-	console.log(req.body);
 
 	maker.login(req.body, function(result){
 		var counter = {counter_id: result.data};
@@ -86,12 +84,15 @@ router.post('/test', function(req, res){
 // 收益： 輸入每週收益； 獲取收益列表
 router.post('/revenue', function(req, res){
 
-	console.log(req.body);
 
 	if(req.body.action=='set'){
 
-
 		maker.getWeek(req.body.date, function(result){
+
+			// 防止选择了错误的时间
+			if(!result[0].week_id){
+				return 0;
+			}
 
 			var para = {
 				week_id: result[0].week_id,
@@ -102,7 +103,7 @@ router.post('/revenue', function(req, res){
 			};
 
 			maker.setWeekRev(para, function(result){
-				console.log("save");
+				res.send("hello");
 			});
 
 		});
@@ -110,8 +111,12 @@ router.post('/revenue', function(req, res){
 
 		if(req.body.action=='getWeekList'){
 			maker.getWeek(req.body.date, function(result){
+				// 防止选择了错误的时间
+				if(!result[0].week_id){
+					return 0;
+				}
+
 				maker.getRevenueList(result[0].week_id, function(result){
-					console.log(result);
 					res.send(result);
 				});
 			});
