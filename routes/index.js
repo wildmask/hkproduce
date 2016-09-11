@@ -16,6 +16,8 @@ router.get('/login', function(req, res, next){
 });
 
 
+
+
 router.post('/login', function(req, res, next){
 
 	var name = req.body.manager;
@@ -77,9 +79,13 @@ router.post('/code', function(req, res, next){
 
 
 router.post('/test', function(req, res){
-	console.log("enter test");
-	maker.configureWeek();
+	console.log("test start");
+
+	exec("mysqldump -u root -p hkproduce --password='123456' > /var/www/html/hkproduce/tmp.sql"); 
+
+	res.send("hello");
 });
+
 
 // 收益： 輸入每週收益； 獲取收益列表
 router.post('/revenue', function(req, res){
